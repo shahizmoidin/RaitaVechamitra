@@ -1,35 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:raitavechamitra/models/payment.dart';
 import 'package:raitavechamitra/screens/login_screen.dart';
 import 'package:raitavechamitra/screens/reminder_screen.dart';
-import 'package:raitavechamitra/screens/report_screen.dart';
+import 'package:raitavechamitra/screens/schemes_screen.dart';
 import 'package:raitavechamitra/screens/weather_screen.dart';
+import 'package:raitavechamitra/utils/localization.dart';
 import 'package:raitavechamitra/widgets/payment_list_item.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:raitavechamitra/widgets/income_expense_chart.dart';
 import 'package:raitavechamitra/chart_enum.dart';
 import 'package:raitavechamitra/screens/profile_screen.dart';
 import 'package:raitavechamitra/screens/settings_screen.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
 import 'payment_form.dart';
 
-// Provider to fetch the authenticated user's data from FirebaseAuth and Firestore
-final authUserProvider = Provider<User?>((ref) {
+// State for the authenticated user
+final authUserProvider = StateProvider<User?>((ref) {
   return FirebaseAuth.instance.currentUser;
 });
 
-// Provider for user data from Firestore
+// State for user document from Firestore
 final userProvider = StreamProvider.autoDispose<DocumentSnapshot<Map<String, dynamic>>>((ref) {
   final user = ref.watch(authUserProvider);
   if (user == null) {
-    return Stream.empty(); // Return an empty stream if user is null
+    return Stream.empty();
   }
   return FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots();
 });
-// Provider for payments data
+
+// State for payments from Firestore
 final paymentsProvider = StreamProvider.autoDispose<List<Payment>>((ref) {
   final user = ref.watch(authUserProvider);
   if (user == null) return Stream.value([]);
@@ -52,6 +59,7 @@ final paymentsProvider = StreamProvider.autoDispose<List<Payment>>((ref) {
           }).toList());
 });
 
+// Home screen widget
 class HomeScreen extends ConsumerStatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -64,93 +72,111 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     start: DateTime.now().subtract(Duration(days: DateTime.now().day - 1)),
     end: DateTime.now(),
   );
-  double _expenseLimit = 500.0; // Example expense limit
+  double _expenseLimit = 500.0;
+  PageController _pageController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user == null) {
+        ref.invalidate(paymentsProvider);
+        ref.invalidate(userProvider);
+        ref.read(authUserProvider.notifier).state = null;
+      } else {
+        ref.read(authUserProvider.notifier).state = user;
+        ref.refresh(userProvider);
+        ref.refresh(paymentsProvider);
+      }
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    _pageController.jumpToPage(index); // Sync with PageView
+  }
 
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => WeatherScreen()),
+  void _openProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ProfileScreen()),
+    );
+  }
 
+  void _openSetting() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SettingsScreen()),
+    );
+  }
+
+  Future<void> _logout() async {
+    final shouldLogout = await _confirmLogout();
+    if (shouldLogout == true) {
+      ref.invalidate(paymentsProvider);
+      ref.invalidate(userProvider);
+      ref.read(authUserProvider.notifier).state = null;
+
+      await FirebaseAuth.instance.signOut();
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (Route<dynamic> route) => false,
       );
     }
-    else if(index==3){
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HealthReminderScreen()),
+  }
 
-      );
-
-    }
-    else if(index==4){
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ReportScreen()),
-
-      );
-
-    }
+  Future<bool?> _confirmLogout() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context).translate('sign_out')),
+        content: Text(AppLocalizations.of(context).translate('are_you_sure')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context).translate('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(AppLocalizations.of(context).translate('sign_out')),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final userSnapshot = ref.watch(userProvider);
-    final paymentsSnapshot = ref.watch(paymentsProvider);
-
+    ref.listen<User?>(authUserProvider, (previousUser, newUser) {
+      if (newUser == null) {
+        ref.invalidate(paymentsProvider);
+        ref.invalidate(userProvider);
+      }
+    });
     return Scaffold(
-      appBar: _buildAppBar(userSnapshot),
-      body: paymentsSnapshot.when(
-        data: (payments) {
-          double income = 0;
-          double expense = 0;
-          for (var payment in payments) {
-            if (payment.type == PaymentType.credit) {
-              income += payment.amount;
-            } else {
-              expense += payment.amount;
-            }
-          }
-
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildGreeting(userSnapshot),
-                  SizedBox(height: 16),
-                  _buildIncomeExpenseRow(income, expense),
-                  SizedBox(height: 20),
-                  _buildChart(payments),
-                  SizedBox(height: 20),
-                  _buildDateRangeSelector(),
-                  SizedBox(height: 16),
-                  _buildPaymentList(payments),
-                  SizedBox(height: 16),
-                  _buildExpenseLimit(expense),
-                  SizedBox(height: 16),
-                  _buildRecentTransactions(payments),
-                ],
-              ),
-            ),
-          );
-        },
-        loading: () => _buildShimmerLoading(),
-        error: (err, _) => Center(child: Text('Error loading payments')),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onItemTapped,
+        children: [
+          _buildHomeBody(),
+          WeatherScreen(),
+          SchemeScreen(),
+          HealthReminderScreen(),
+        ],
       ),
       bottomNavigationBar: _buildBottomNavBar(),
-      floatingActionButton: _buildFAB(),
+      floatingActionButton: _selectedIndex == 0 ? _buildFAB() : null,
     );
   }
 
-  AppBar _buildAppBar(AsyncValue<DocumentSnapshot<Map<String, dynamic>>> userSnapshot) {
+  AppBar _buildAppBar() {
     return AppBar(
       title: Text(
-        'Raitavechamitra',
+        AppLocalizations.of(context).translate('title'),
         style: TextStyle(
           color: Colors.white,
           fontSize: 24,
@@ -168,55 +194,258 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       actions: [
+        IconButton(
+          icon: Icon(Icons.download, color: Colors.white),
+          onPressed: _downloadPDF,
+        ),
         PopupMenuButton<int>(
           icon: Icon(Icons.person, color: Colors.white),
           onSelected: (item) {
             if (item == 0) {
               _openProfile();
             } else if (item == 1) {
-              _openSettings();
+              _openSetting();
             } else if (item == 2) {
               _logout();
             }
           },
           itemBuilder: (context) => [
-            PopupMenuItem(value: 0, child: Text('Profile')),
-            PopupMenuItem(value: 1, child: Text('Settings')),
-            PopupMenuItem(value: 2, child: Text('Logout')),
+            PopupMenuItem(value: 0, child: Text(AppLocalizations.of(context).translate('profile'))),
+            PopupMenuItem(value: 1, child: Text(AppLocalizations.of(context).translate('settings'))),
+            PopupMenuItem(value: 2, child: Text(AppLocalizations.of(context).translate('sign_out'))),
           ],
         ),
       ],
     );
   }
 
+  Future<void> _downloadPDF() async {
+    final pdf = pw.Document();
+    final Uint8List logoBytes = (await rootBundle.load('assets/images/logo.png')).buffer.asUint8List();
+    final ttf = pw.Font.ttf(await rootBundle.load("assets/fonts/NotoSans-Regular.ttf"));
+    final payments = ref.watch(paymentsProvider).asData?.value ?? [];
+
+    pdf.addPage(
+      pw.Page(
+        theme: pw.ThemeData.withFont(base: ttf),
+        build: (pw.Context context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Center(
+              child: pw.Image(pw.MemoryImage(logoBytes), height: 100),
+            ),
+            pw.Text('Income & Expense Report', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            pw.Text('Generated on ${DateFormat.yMMMMd().format(DateTime.now())}'),
+            pw.SizedBox(height: 20),
+            pw.Text('Income and Expense Details', style: pw.TextStyle(fontSize: 16)),
+            pw.Divider(),
+            for (var payment in payments)
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(payment.category),
+                  pw.Text('Rs ${payment.amount.toStringAsFixed(2)}'),
+                  pw.Text(DateFormat.yMMMd().format(payment.date)),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+
+    await Printing.sharePdf(bytes: await pdf.save(), filename: 'income_expense_report.pdf');
+  }
+
+  Widget _buildHomeBody() {
+    return Scaffold(
+      appBar: _buildAppBar(),
+      body: Consumer(
+        builder: (context, ref, _) {
+          final userSnapshot = ref.watch(userProvider);
+          final paymentsSnapshot = ref.watch(paymentsProvider);
+
+          return paymentsSnapshot.when(
+            error: (error, stackTrace) => Center(child: Text('Error loading payments: $error')),
+            data: (payments) {
+              final filteredPayments = payments.where((payment) {
+                return payment.date.isAfter(_dateRange.start.subtract(Duration(days: 1))) &&
+                       payment.date.isBefore(_dateRange.end.add(Duration(days: 1)));
+              }).toList();
+
+              double income = 0;
+              double expense = 0;
+              for (var payment in filteredPayments) {
+                if (payment.type == PaymentType.credit) {
+                  income += payment.amount;
+                } else if (payment.type == PaymentType.debit) {
+                  expense += payment.amount;
+                }
+              }
+
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGreeting(userSnapshot),
+                      SizedBox(height: 16),
+                      _buildIncomeExpenseRow(income, expense),
+                      SizedBox(height: 20),
+                      _buildChart(filteredPayments),
+                      SizedBox(height: 20),
+                      _buildDateRangeSelector(),
+                      SizedBox(height: 16),
+                      _buildPaymentList(filteredPayments),
+                      SizedBox(height: 16),
+                      _buildExpenseLimit(expense),
+                      SizedBox(height: 16),
+                      _buildRecentTransactions(filteredPayments),
+                    ],
+                  ),
+                ),
+              );
+            },
+            loading: () => _buildShimmerLoading(),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFAB() {
+    return FloatingActionButton(
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) => _buildAddPaymentOptions(),
+        );
+      },
+      child: Icon(Icons.add),
+      backgroundColor: Colors.green,
+      foregroundColor: Colors.white,
+    );
+  }
+
+  Widget _buildAddPaymentOptions() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(Icons.add, color: Colors.green),
+            title: Text(AppLocalizations.of(context).translate('add_income')),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentForm(
+                    type: PaymentType.credit,
+                    userId: ref.read(authUserProvider)?.uid ?? '',
+                  ),
+                ),
+              ).then((_) => ref.refresh(paymentsProvider));
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.remove, color: Colors.red),
+            title: Text(AppLocalizations.of(context).translate('add_expense')),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentForm(
+                    type: PaymentType.debit,
+                    userId: ref.read(authUserProvider)?.uid ?? '',
+                  ),
+                ),
+              ).then((_) => ref.refresh(paymentsProvider));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateRangeSelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        TextButton.icon(
+          onPressed: _handleChooseDateRange,
+          icon: Icon(Icons.date_range),
+          label: Text(
+            '${DateFormat.yMMMd().format(_dateRange.start)} - ${DateFormat.yMMMd().format(_dateRange.end)}',
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handleChooseDateRange() async {
+    final DateTimeRange? newDateRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      initialDateRange: _dateRange,
+    );
+    if (newDateRange != null) {
+      setState(() {
+        _dateRange = newDateRange;
+      });
+      ref.refresh(paymentsProvider);  // Refresh payments after date range change
+    }
+  }
+
+  Widget _buildShimmerLoading() {
+    return ListView.separated(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: 5,
+      separatorBuilder: (context, index) => Divider(),
+      itemBuilder: (context, index) {
+        return Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: ListTile(
+            contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+            title: Container(height: 15, color: Colors.white),
+            subtitle: Container(height: 10, color: Colors.white),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildGreeting(AsyncValue<DocumentSnapshot<Map<String, dynamic>>> userSnapshot) {
-    return userSnapshot.when(
-      data: (snapshot) {
-        final data = snapshot.data() as Map<String, dynamic>;
-        final name = data['name'] ?? 'Farmer';
+    return Consumer(
+      builder: (context, ref, _) {
+        final data = userSnapshot.when(
+          data: (snapshot) => snapshot.data() as Map<String, dynamic>?,
+          loading: () => null,
+          error: (error, stackTrace) => null,
+        );
+
+        final name = data?['name'] ?? AppLocalizations.of(context).translate('farmer');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Hi, $name",
+              "${AppLocalizations.of(context).translate('hello')} $name",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.green[900],
-              ),
-            ),
-            Text(
-              "Here's your financial summary",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[700],
               ),
             ),
           ],
         );
       },
-      loading: () => CircularProgressIndicator(),
-      error: (err, stack) => Text("Error loading user data"),
     );
   }
 
@@ -224,9 +453,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(child: _buildCard('Income', income, Colors.green)),
+        Expanded(child: _buildCard(AppLocalizations.of(context).translate('income'), income, Colors.green)),
         SizedBox(width: 16),
-        Expanded(child: _buildCard('Expense', expense, Colors.red)),
+        Expanded(child: _buildCard(AppLocalizations.of(context).translate('expense'), expense, Colors.red)),
       ],
     );
   }
@@ -279,21 +508,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildDateRangeSelector() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        TextButton.icon(
-          onPressed: _handleChooseDateRange,
-          icon: Icon(Icons.date_range),
-          label: Text(
-            '${DateFormat.yMMMd().format(_dateRange.start)} - ${DateFormat.yMMMd().format(_dateRange.end)}',
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildPaymentList(List<Payment> payments) {
     return ListView.separated(
       shrinkWrap: true,
@@ -305,16 +519,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onTap: () {},
           payment: payments[index],
           onDelete: (payment) {
-            FirebaseFirestore.instance
-                .collection('users')
-                .doc(ref.watch(authUserProvider)?.uid)
-                .collection('payments')
-                .doc(payment.id)
-                .delete();
+            _showDeleteDialog(payment);
           },
         );
       },
     );
+  }
+
+  void _showDeleteDialog(Payment payment) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context).translate('delete_payment')),
+        content: Text(AppLocalizations.of(context).translate('are_you_sure_delete')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context).translate('cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              _deletePayment(payment);
+              Navigator.pop(context);
+            },
+            child: Text(AppLocalizations.of(context).translate('delete'), style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deletePayment(Payment payment) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(ref.watch(authUserProvider)?.uid)
+          .collection('payments')
+          .doc(payment.id)
+          .delete();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context).translate('error_deleting_payment')}: $e')));
+    }
   }
 
   Widget _buildExpenseLimit(double totalExpense) {
@@ -324,7 +569,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Daily Expense Limit: ₹${_expenseLimit.toStringAsFixed(2)}",
+          "${AppLocalizations.of(context).translate('expense_limit')}: ₹${_expenseLimit.toStringAsFixed(2)}",
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 8),
@@ -336,7 +581,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         SizedBox(height: 8),
         Text(
-          "You have used ${percentUsed.toStringAsFixed(1)}% of your daily limit.",
+          "${AppLocalizations.of(context).translate('used_limit')}: ${percentUsed.toStringAsFixed(1)}%",
           style: TextStyle(fontSize: 14, color: percentUsed > 100 ? Colors.red : Colors.black),
         ),
       ],
@@ -344,13 +589,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildRecentTransactions(List<Payment> payments) {
-    final recentPayments = payments.take(3).toList(); // Get the latest 3 transactions
+    final recentPayments = payments.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Recent Transactions",
+          AppLocalizations.of(context).translate('recent_transactions'),
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         ListView.builder(
@@ -378,134 +623,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildBottomNavBar() {
     return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
       currentIndex: _selectedIndex,
       onTap: _onItemTapped,
       selectedItemColor: Colors.green[800],
       unselectedItemColor: Colors.grey,
       backgroundColor: Colors.green[50],
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Weather'),
-        BottomNavigationBarItem(icon: Icon(Icons.article), label: 'Schemes'),
-        BottomNavigationBarItem(icon: Icon(Icons.health_and_safety), label: 'Health'),
-        BottomNavigationBarItem(icon: Icon(Icons.report), label: 'Reports'),
+      items: [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: AppLocalizations.of(context).translate('home'),
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.cloud),
+          label: AppLocalizations.of(context).translate('weather'),
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.article),
+          label: AppLocalizations.of(context).translate('schemes'),
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.health_and_safety),
+          label: AppLocalizations.of(context).translate('health'),
+        ),
       ],
     );
-  }
-
-  Widget _buildFAB() {
-    return FloatingActionButton(
-      onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (context) => _buildAddPaymentOptions(),
-        );
-      },
-      child: Icon(Icons.add),
-      backgroundColor: Colors.green,
-      foregroundColor: Colors.white,
-    );
-  }
-
-  Widget _buildAddPaymentOptions() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: Icon(Icons.add, color: Colors.green),
-            title: Text('Add Income'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PaymentForm(
-                    type: PaymentType.credit,
-                    userId: ref.watch(authUserProvider)?.uid ?? '',
-                  ),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.remove, color: Colors.red),
-            title: Text('Add Expense'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PaymentForm(
-                    type: PaymentType.debit,
-                    userId: ref.watch(authUserProvider)?.uid ?? '',
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _handleChooseDateRange() async {
-    final DateTimeRange? newDateRange = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      initialDateRange: _dateRange,
-    );
-    if (newDateRange != null) {
-      setState(() {
-        _dateRange = newDateRange;
-      });
-    }
-  }
-
-  Widget _buildShimmerLoading() {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: 5,
-      separatorBuilder: (context, index) => Divider(),
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: ListTile(
-            contentPadding: EdgeInsets.symmetric(vertical: 10.0),
-            title: Container(height: 15, color: Colors.white),
-            subtitle: Container(height: 10, color: Colors.white),
-          ),
-        );
-      },
-    );
-  }
-
-  void _openProfile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ProfileScreen()),
-    );
-  }
-
-  void _openSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SettingsScreen()),
-    );
-  }
-
-  void _logout() {
-    FirebaseAuth.instance.signOut().then((_) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
-    });
   }
 }

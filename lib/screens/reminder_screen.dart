@@ -1,74 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
+import 'package:raitavechamitra/screens/sleep_tracker.dart';
+import 'package:raitavechamitra/utils/localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-class HealthReminderScreen extends ConsumerStatefulWidget {
+class HealthReminderScreen extends StatefulWidget {
   @override
   _HealthReminderScreenState createState() => _HealthReminderScreenState();
 }
 
-class _HealthReminderScreenState extends ConsumerState<HealthReminderScreen> {
+class _HealthReminderScreenState extends State<HealthReminderScreen> {
   double waterIntakeProgress = 0.0;
+  DateTime _lastUpdatedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _initializeNotifications();
-    tz.initializeTimeZones();
+    _loadWaterIntakeProgress();
   }
 
-  void _initializeNotifications() async {
-    final androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    final iosSettings = DarwinInitializationSettings();
-    final settings = InitializationSettings(android: androidSettings, iOS: iosSettings);
-    
-    await flutterLocalNotificationsPlugin.initialize(settings);
-    _scheduleDailyNotifications();
+  Future<void> _loadWaterIntakeProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      waterIntakeProgress = prefs.getDouble('waterIntakeProgress') ?? 0.0;
+      _lastUpdatedDate = DateTime.tryParse(prefs.getString('lastUpdatedDate') ?? '') ?? DateTime.now();
+      if (!_isSameDay(DateTime.now(), _lastUpdatedDate)) {
+        waterIntakeProgress = 0.0;
+        _saveWaterIntakeProgress();
+      }
+    });
   }
 
-  void _scheduleDailyNotifications() async {
-    await _scheduleNotification('Stay Hydrated!', 'Drink a glass of water now.', 9, 0);  // Morning hydration reminder
-    await _scheduleNotification('Stretch Break', 'Take a few minutes to stretch and relax.', 12, 0); // Noon stretch break
-    await _scheduleNotification('Healthy Eating', 'Don’t forget to eat a healthy lunch!', 14, 0);   // Afternoon eating reminder
-    await _scheduleNotification('Rest and Recharge', 'Time to relax and sleep well.', 21, 0);  // Evening relaxation reminder
+  Future<void> _saveWaterIntakeProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('waterIntakeProgress', waterIntakeProgress);
+    await prefs.setString('lastUpdatedDate', DateTime.now().toIso8601String());
   }
 
-  Future<void> _scheduleNotification(String title, String body, int hour, int minute) async {
-    const androidDetails = AndroidNotificationDetails('reminder_id', 'Health Reminders', 
-      importance: Importance.max);
-    final iosDetails = DarwinNotificationDetails();
-    final platformDetails = NotificationDetails(android: androidDetails, iOS: iosDetails);
-
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      title,
-      body,
-      _nextInstanceOfTime(hour, minute),
-      platformDetails,
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.wallClockTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-  }
-
-  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-    return scheduledDate;
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year && date1.month == date2.month && date1.day == date2.day;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Health & Safety Reminders'),
+        title: Text(AppLocalizations.of(context).translate('health_reminders'),style: TextStyle(color: Colors.white),),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -87,46 +63,46 @@ class _HealthReminderScreenState extends ConsumerState<HealthReminderScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHealthTipCard(
-                'Stay Hydrated',
-                'Make sure to drink water every hour, especially during long farming hours. Proper hydration is key to maintaining energy levels.',
+                AppLocalizations.of(context).translate('stay_hydrated'),
+                AppLocalizations.of(context).translate('stay_hydrated_desc'),
                 Icons.local_drink,
                 Colors.blue,
+                () => _trackWaterIntake(),
               ),
               SizedBox(height: 16),
               _buildWaterTracker(),
               SizedBox(height: 16),
               _buildHealthTipCard(
-                'Take Breaks',
-                'Taking short breaks while working in the field helps prevent fatigue and muscle strain. Try to stretch every hour.',
+                AppLocalizations.of(context).translate('take_breaks'),
+                AppLocalizations.of(context).translate('take_breaks_desc'),
                 Icons.self_improvement,
                 Colors.purple,
+                () => _showStretchBreakInfo(),
               ),
               SizedBox(height: 16),
-              _buildStretchingReminder(),
-              SizedBox(height: 16),
               _buildHealthTipCard(
-                'UV Protection',
-                'Be mindful of UV exposure during peak hours (10 AM - 4 PM). Wear protective clothing and apply sunscreen.',
+                 AppLocalizations.of(context).translate('protect_uv'),
+                 AppLocalizations.of(context).translate('protect_uv_desc'),
                 Icons.wb_sunny,
                 Colors.orange,
-              ),
-              SizedBox(height: 16),
-              _buildUVIndexAlert(),
-              SizedBox(height: 16),
-              _buildHealthTipCard(
-                'Natural Remedies',
-                'For cuts and scrapes, apply honey or turmeric for faster healing. Aloe vera gel works great for sunburns.',
-                Icons.healing,
-                Colors.teal,
+                () => _showUVInfo(),
               ),
               SizedBox(height: 16),
               _buildHealthTipCard(
-                'Get Enough Sleep',
-                'Ensure at least 7-8 hours of sleep every day to recharge your body and mind. Good sleep is essential for a productive day.',
+                 AppLocalizations.of(context).translate('get_sleep'),
+                 AppLocalizations.of(context).translate('get_sleep_desc'),
                 Icons.bedtime,
                 Colors.indigo,
+                () =>   _showSleepTracker(),
               ),
               SizedBox(height: 16),
+              _buildHealthTipCard(
+                 AppLocalizations.of(context).translate('remedies_tips'),
+                 AppLocalizations.of(context).translate('remedies_tips_desc'),
+                Icons.healing,
+                Colors.redAccent,
+                () => _showRemedies(),
+              ),
             ],
           ),
         ),
@@ -134,49 +110,51 @@ class _HealthReminderScreenState extends ConsumerState<HealthReminderScreen> {
     );
   }
 
-  Widget _buildHealthTipCard(String title, String description, IconData icon, Color color) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withOpacity(0.2),
-              radius: 35,
-              child: Icon(icon, color: color, size: 30),
-            ),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    description,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                  ),
-                ],
+  Widget _buildHealthTipCard(String title, String description, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withOpacity(0.2),
+                radius: 35,
+                child: Icon(icon, color: color, size: 30),
               ),
-            ),
-          ],
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      description,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Water Intake Tracker Widget
   Widget _buildWaterTracker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Water Intake Tracker',
+          AppLocalizations.of(context).translate('water_tracker'),
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
         ),
         SizedBox(height: 10),
@@ -190,16 +168,10 @@ class _HealthReminderScreenState extends ConsumerState<HealthReminderScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('${(waterIntakeProgress * 100).toStringAsFixed(0)}% of daily intake'),
+            Text('${(waterIntakeProgress * 100).toStringAsFixed(0)}%'+AppLocalizations.of(context).translate('of_daily')),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  if (waterIntakeProgress < 1.0) {
-                    waterIntakeProgress += 0.1;
-                  }
-                });
-              },
-              child: Text('Add Water Intake'),
+              onPressed: _trackWaterIntake,
+              child: Text(AppLocalizations.of(context).translate('add_water_intake')),
             ),
           ],
         ),
@@ -207,23 +179,174 @@ class _HealthReminderScreenState extends ConsumerState<HealthReminderScreen> {
     );
   }
 
-  // Stretching Reminder Widget
-  Widget _buildStretchingReminder() {
-    return _buildHealthTipCard(
-      'Stretch Every Hour',
-      'Set a reminder to take a stretching break every hour. Stretching improves blood flow and prevents muscle fatigue.',
-      Icons.accessibility_new,
-      Colors.purple,
+  void _trackWaterIntake() {
+    setState(() {
+      if (waterIntakeProgress < 1.0) {
+        waterIntakeProgress += 0.1;
+        _saveWaterIntakeProgress();
+      }
+    });
+  }
+
+  void _showStretchBreakInfo() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppLocalizations.of(context).translate('stretch_breaks'))),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalizations.of(context).translate('stretch_importance'),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text(
+                AppLocalizations.of(context).translate('stretch_importance_desc')
+              ),
+              SizedBox(height: 20),
+              Text(
+                 AppLocalizations.of(context).translate('stretching_exercises'),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              _buildStretchExercise(AppLocalizations.of(context).translate('neck_stretch'),AppLocalizations.of(context).translate('neck_stretch_desc')),
+              _buildStretchExercise(AppLocalizations.of(context).translate('shoulder_shrugs'),AppLocalizations.of(context).translate('shoulder_shrugs_desc')),
+              _buildStretchExercise(AppLocalizations.of(context).translate('leg_stretch'),AppLocalizations.of(context).translate('leg_stretch_desc')),
+            ],
+          ),
+        ),
+      );
+    }));
+  }
+
+  Widget _buildStretchExercise(String name, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(Icons.check, color: Colors.green),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(description),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  // UV Index Alert Widget
-  Widget _buildUVIndexAlert() {
-    return _buildHealthTipCard(
-      'UV Index Alert',
-      'During peak UV index hours (10 AM - 4 PM), avoid prolonged sun exposure. Wear protective clothing and apply sunscreen.',
-      Icons.wb_sunny,
-      Colors.orange,
+  void _showUVInfo() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppLocalizations.of(context).translate('uv_protection'))),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalizations.of(context).translate('understand_uv'),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text(
+                AppLocalizations.of(context).translate('uv_desc')
+              ),
+              SizedBox(height: 20),
+              Text(
+                 AppLocalizations.of(context).translate('uv_levels'),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              _buildUVIndexInfo(AppLocalizations.of(context).translate('low_uv'), AppLocalizations.of(context).translate('low_uv_desc')),
+              _buildUVIndexInfo(AppLocalizations.of(context).translate('moderate_uv'), AppLocalizations.of(context).translate('moderate_uv_desc')),
+              _buildUVIndexInfo(AppLocalizations.of(context).translate('high_uv'), AppLocalizations.of(context).translate('high_uv_desc')),
+              _buildUVIndexInfo(AppLocalizations.of(context).translate('very_high_uv'), AppLocalizations.of(context).translate('very_high_uv_desc')),
+              _buildUVIndexInfo(AppLocalizations.of(context).translate('extreme_uv'), AppLocalizations.of(context).translate('extreme_uv_desc')),
+            ],
+          ),
+        ),
+      );
+    }));
+  }
+
+  Widget _buildUVIndexInfo(String level, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(Icons.wb_sunny, color: Colors.orange),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(level, style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(description),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSleepTracker() {
+  Navigator.push(context, MaterialPageRoute(builder: (context) {
+    return SleepTrackerScreen();
+  }));
+}
+
+  void _showRemedies() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppLocalizations.of(context).translate('remedies_tips'))),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalizations.of(context).translate('remedies_tips_desc'),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              _buildRemedy(AppLocalizations.of(context).translate('honey_lemon'), AppLocalizations.of(context).translate('honey_lemon_desc')),
+              _buildRemedy(AppLocalizations.of(context).translate('ginger_tea'), AppLocalizations.of(context).translate('ginger_tea_desc')),
+              _buildRemedy(AppLocalizations.of(context).translate('turmeric_milk'), AppLocalizations.of(context).translate('turmeric_milk_desc')),
+              _buildRemedy(AppLocalizations.of(context).translate('stay_active'), AppLocalizations.of(context).translate('stay_active_desc')),
+            ],
+          ),
+        ),
+      );
+    }));
+  }
+
+  Widget _buildRemedy(String name, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(Icons.local_florist, color: Colors.redAccent),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(description),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

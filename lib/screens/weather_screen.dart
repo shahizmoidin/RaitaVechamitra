@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:raitavechamitra/services/weather_service.dart';
+import 'package:raitavechamitra/utils/localization.dart';
 
 final weatherProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, location) async {
   final weatherService = WeatherService();
@@ -19,7 +20,7 @@ class WeatherScreen extends ConsumerStatefulWidget {
 }
 
 class _WeatherScreenState extends ConsumerState<WeatherScreen> {
-  String location = 'London';
+  String location = 'Karnataka';
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +29,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Weather Forecast'),
+        title: Text(AppLocalizations.of(context).translate('weather_forecast'),
+        style: TextStyle(color:Colors.white),),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue[400]!, Colors.blue[800]!],
+              colors: [Colors.green[400]!, Colors.green[800]!], // App's gradient theme
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -41,7 +43,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: Icon(Icons.search,color: Colors.white,),
             onPressed: () {
               _showLocationSearch(context);
             },
@@ -61,20 +63,20 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                       _buildCurrentWeather(weatherData),
                       SizedBox(height: 16),
                       Text(
-                        'Weather Details',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+                        AppLocalizations.of(context).translate('weather_details'),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[700]),
                       ),
                       _buildWeatherDetails(weatherData),
                       SizedBox(height: 16),
                       Text(
-                        'Next 12 Hours',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+                         AppLocalizations.of(context).translate('next_12'),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[700]),
                       ),
                       _buildHourlyForecast(forecastData, isNext: true),
                       SizedBox(height: 16),
                       Text(
-                        'Previous 12 Hours',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+                         AppLocalizations.of(context).translate('previous_12'),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[700]),
                       ),
                       _buildHourlyForecast(forecastData, isNext: false),
                     ],
@@ -92,6 +94,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     );
   }
 
+  // Current Weather Widget
   Widget _buildCurrentWeather(Map<String, dynamic> weatherData) {
     final temp = weatherData['main']['temp'];
     final description = weatherData['weather'][0]['description'];
@@ -103,7 +106,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.withOpacity(0.5), Colors.blueAccent.withOpacity(0.7)],
+            colors: [Colors.green[400]!.withOpacity(0.5), Colors.greenAccent.withOpacity(0.7)], // App's color scheme
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -137,6 +140,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     );
   }
 
+  // Weather Details Card
   Widget _buildWeatherDetails(Map<String, dynamic> weatherData) {
     final humidity = weatherData['main']['humidity'];
     final pressure = weatherData['main']['pressure'];
@@ -150,19 +154,20 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildWeatherDetailItem('Humidity', '$humidity%', Icons.water),
-            _buildWeatherDetailItem('Pressure', '$pressure hPa', Icons.compress),
-            _buildWeatherDetailItem('Wind', '$windSpeed m/s', Icons.air),
+            _buildWeatherDetailItem(AppLocalizations.of(context).translate('humidity'), '$humidity%', Icons.water),
+            _buildWeatherDetailItem(AppLocalizations.of(context).translate('password'), '$pressure hPa', Icons.compress),
+            _buildWeatherDetailItem(AppLocalizations.of(context).translate('wind_speed'), '$windSpeed m/s', Icons.air),
           ],
         ),
       ),
     );
   }
 
+  // Single Weather Detail Widget
   Widget _buildWeatherDetailItem(String title, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.blue, size: 30),
+        Icon(icon, color: Colors.green[700], size: 30), // Use green icon colors to match the theme
         SizedBox(height: 5),
         Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         SizedBox(height: 5),
@@ -171,6 +176,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     );
   }
 
+  // Hourly Forecast
   Widget _buildHourlyForecast(Map<String, dynamic> forecastData, {required bool isNext}) {
     final forecastList = forecastData['list'];
     final currentTime = DateTime.now();
@@ -211,21 +217,23 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     );
   }
 
+  // Loading Spinner
   Widget _buildLoading() {
-    return Center(child: CircularProgressIndicator());
+    return Center(child: CircularProgressIndicator(color: Colors.green));
   }
 
+  // Location Search Dialog
   void _showLocationSearch(BuildContext context) {
     TextEditingController searchController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Search Location'),
+        title: Text(AppLocalizations.of(context).translate('search_loc')),
         content: SingleChildScrollView(
           child: TextField(
             controller: searchController,
-            decoration: InputDecoration(hintText: 'Enter city name'),
+            decoration: InputDecoration(hintText: AppLocalizations.of(context).translate('enter_city')),
           ),
         ),
         actions: [
@@ -236,7 +244,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
               });
               Navigator.pop(context);
             },
-            child: Text('Search'),
+            child: Text(AppLocalizations.of(context).translate('search')),
           ),
         ],
       ),

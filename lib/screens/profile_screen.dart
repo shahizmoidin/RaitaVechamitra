@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:raitavechamitra/screens/login_screen.dart';
+import 'package:raitavechamitra/utils/localization.dart'; // Import localization
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -25,7 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Profile"),
+        title: Text(AppLocalizations.of(context).translate('profile')), // Localized
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -42,15 +44,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildProfileHeader(),
+              _buildProfileHeader(context),
               SizedBox(height: 20),
-              _buildEditNameField(),
+              _buildEditNameField(context),
               SizedBox(height: 20),
-              _buildSaveButton(),
+              _buildSaveButton(context),
               SizedBox(height: 40),
-              _buildSignOutButton(),
+              _buildSignOutButton(context),
               SizedBox(height: 10),
-              _buildDeleteAccountButton(),
+              _buildDeleteAccountButton(context),
               if (isLoading) CircularProgressIndicator(), // Show loading indicator
             ],
           ),
@@ -60,31 +62,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Function to build Profile Header with Avatar
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(BuildContext context) {
     return Column(
       children: [
         CircleAvatar(
           radius: 50,
           backgroundColor: Colors.greenAccent[400],
           child: Text(
-            user?.displayName?.isNotEmpty == true ? 
-            user!.displayName!.substring(0, 1).toUpperCase() : 'N', // Check for non-empty displayName
+            user?.displayName?.isNotEmpty == true 
+              ? user!.displayName!.substring(0, 1).toUpperCase() 
+              : 'N', // Check for non-empty displayName
             style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
         SizedBox(height: 10),
         Text(
-          user?.displayName ?? 'Guest User',
+          user?.displayName ?? AppLocalizations.of(context).translate('guest_user'), // Localized
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
         ),
         SizedBox(height: 5),
         Text(
-          'Email: ${user?.email ?? 'N/A'}',
+          '${AppLocalizations.of(context).translate('email')}: ${user?.email ?? 'N/A'}', // Localized
           style: TextStyle(fontSize: 16, color: Colors.grey[700]),
         ),
         SizedBox(height: 5),
         Text(
-          'Using Since: ${DateFormat.yMMMd().format(user?.metadata.creationTime ?? DateTime.now())}',
+          '${AppLocalizations.of(context).translate('using_since')}: ${DateFormat.yMMMd().format(user?.metadata.creationTime ?? DateTime.now())}', // Localized
           style: TextStyle(fontSize: 16, color: Colors.grey[700]),
         ),
       ],
@@ -92,12 +95,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Widget to edit name
-  Widget _buildEditNameField() {
+  Widget _buildEditNameField(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Edit Name',
+          AppLocalizations.of(context).translate('edit_name'), // Localized
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[700]),
         ),
         SizedBox(height: 10),
@@ -110,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(12.0),
               borderSide: BorderSide.none,
             ),
-            hintText: 'Enter your name',
+            hintText: AppLocalizations.of(context).translate('enter_name'), // Localized
           ),
           onChanged: (value) {
             setState(() {
@@ -123,11 +126,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Save Button
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: isEditing ? _saveDisplayName : null,
       icon: Icon(Icons.save),
-      label: Text('Save Changes'),
+      label: Text(AppLocalizations.of(context).translate('save_changes')), // Localized
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.white, backgroundColor: Colors.green[700],
         minimumSize: Size(double.infinity, 50),
@@ -152,25 +155,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isLoading = false; // Stop loading
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Name updated successfully!')),
+          SnackBar(content: Text(AppLocalizations.of(context).translate('name_updated'))), // Localized
         );
       } catch (e) {
         setState(() {
           isLoading = false; // Stop loading in case of error
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update name: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context).translate('failed_update_name')}: $e')), // Localized
         );
       }
     }
   }
 
   // Sign Out Button
-  Widget _buildSignOutButton() {
+  Widget _buildSignOutButton(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: () => _showSignOutConfirmation(),
+      onPressed: () => _showSignOutConfirmation(context),
       icon: Icon(Icons.logout),
-      label: Text('Sign Out'),
+      label: Text(AppLocalizations.of(context).translate('sign_out')), // Localized
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.white, backgroundColor: Colors.red,
         minimumSize: Size(double.infinity, 50),
@@ -182,21 +185,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Show confirmation dialog for signing out
-  Future<void> _showSignOutConfirmation() async {
+  Future<void> _showSignOutConfirmation(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Confirm Sign Out'),
-          content: Text('Are you sure you want to sign out?'),
+          title: Text(AppLocalizations.of(context).translate('confirm_sign_out')), // Localized
+          content: Text(AppLocalizations.of(context).translate('are_you_sure_sign_out')), // Localized
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
+              child: Text(AppLocalizations.of(context).translate('cancel')), // Localized
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Sign Out'),
+              child: Text(AppLocalizations.of(context).translate('sign_out')), // Localized
             ),
           ],
         );
@@ -210,16 +213,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Sign Out Logic
   Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pushReplacementNamed('/login');
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${AppLocalizations.of(context).translate('error_signing_out')}: $e')), // Localized
+      );
+    }
   }
 
   // Delete Account Button
-  Widget _buildDeleteAccountButton() {
+  Widget _buildDeleteAccountButton(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: () => _showDeleteAccountConfirmation(),
+      onPressed: () => _showDeleteAccountConfirmation(context),
       icon: Icon(Icons.delete),
-      label: Text('Delete Account'),
+      label: Text(AppLocalizations.of(context).translate('delete_account')), // Localized
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.white, backgroundColor: Colors.red[700],
         minimumSize: Size(double.infinity, 50),
@@ -231,21 +243,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Show confirmation dialog for deleting account
-  Future<void> _showDeleteAccountConfirmation() async {
+  Future<void> _showDeleteAccountConfirmation(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Confirm Account Deletion'),
-          content: Text('Are you sure you want to delete your account? This action cannot be undone.'),
+          title: Text(AppLocalizations.of(context).translate('confirm_delete_account')), // Localized
+          content: Text(AppLocalizations.of(context).translate('are_you_sure_delete')), // Localized
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
+              child: Text(AppLocalizations.of(context).translate('cancel')), // Localized
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Delete Account'),
+              child: Text(AppLocalizations.of(context).translate('delete')), // Localized
             ),
           ],
         );
@@ -271,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isLoading = false; // Stop loading in case of error
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete account: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context).translate('failed_delete_account')}: $e')), // Localized
         );
       }
     }

@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:provider/provider.dart';
+import 'package:raitavechamitra/providers/local_provider.dart';
+import 'package:raitavechamitra/utils/localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:raitavechamitra/screens/login_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // Firebase Messaging for notification control
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -9,15 +15,148 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // Dummy variable for demonstration; you can use a proper state management solution
   bool _notificationsEnabled = true; // Default value
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationSettings();
+  }
+
+  // Load notification setting from shared preferences
+  Future<void> _loadNotificationSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
+    });
+  }
+
+  // Save notification setting to shared preferences
+  Future<void> _saveNotificationSettings(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notificationsEnabled', value);
+  }
+
+  // Toggle Notifications (enable/disable Firebase Messaging)
+  Future<void> _toggleNotifications(bool value) async {
+    setState(() {
+      _notificationsEnabled = value;
+    });
+    _saveNotificationSettings(value);
+
+    if (value) {
+      await _enableNotifications();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context).translate('notifications_enabled')),
+        backgroundColor: Colors.green,
+      ));
+    } else {
+      await _disableNotifications();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context).translate('notifications_disabled')),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  // Enable Notifications by re-enabling Firebase Messaging
+  Future<void> _enableNotifications() async {
+    await _firebaseMessaging.setAutoInitEnabled(true); // Enable Firebase Messaging
+    NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted notification permission');
+    } else {
+      print('User declined or has not accepted notification permissions');
+    }
+  }
+
+  // Disable Notifications by unsubscribing from Firebase Messaging
+  Future<void> _disableNotifications() async {
+    await _firebaseMessaging.setAutoInitEnabled(false); // Disable Firebase Messaging
+    await _firebaseMessaging.unsubscribeFromTopic('all'); // Unsubscribe from global topic or any relevant topics
+  }
+
+  // Language Selection Handler
+  void _selectLanguage(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.green[50], // Light green background
+          title: Text(
+            AppLocalizations.of(context).translate('select_language'),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.green[800], // Dark green color for the title
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                ListTile(
+                  leading: Icon(Icons.language, color: Colors.green),
+                  title: Text(
+                    AppLocalizations.of(context).translate('eng'),
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  onTap: () {
+                    context.read<LocaleProvider>().setLocale(Locale('en'));
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.language, color: Colors.green),
+                  title: Text(
+                    AppLocalizations.of(context).translate('kan'),
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  onTap: () {
+                    context.read<LocaleProvider>().setLocale(Locale('kn'));
+                    Navigator.pop(context);
+                  },
+                ),
+                 ListTile(
+                  leading: Icon(Icons.language, color: Colors.green),
+                  title: Text(
+                    AppLocalizations.of(context).translate('hin'),
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  onTap: () {
+                    context.read<LocaleProvider>().setLocale(Locale('hi'));
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                AppLocalizations.of(context).translate('cancel'),
+                style: TextStyle(color: Colors.green[800]),
+              ),
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text(AppLocalizations.of(context).translate('settings')),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -35,13 +174,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNotificationOption(context),
           _buildSettingOption(
             context,
-            title: 'Reset Password',
+            title: AppLocalizations.of(context).translate('reset_password'),
             icon: Icons.lock_reset,
             onTap: () => _resetPassword(context),
           ),
           _buildSettingOption(
             context,
-            title: 'Delete Account',
+            title: AppLocalizations.of(context).translate('delete_account'),
             icon: Icons.delete_forever,
             onTap: () => _confirmDeleteAccount(context),
             color: Colors.redAccent,
@@ -49,16 +188,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Divider(),
           _buildSettingOption(
             context,
-            title: 'Sign Out',
+            title: AppLocalizations.of(context).translate('sign_out'),
             icon: Icons.logout,
             onTap: _signOut,
           ),
           Divider(),
           _buildSettingOption(
             context,
-            title: 'Language',
+            title: AppLocalizations.of(context).translate('language'),
             icon: Icons.language,
-            onTap: _changeLanguage,
+            onTap: () => _selectLanguage(context),
           ),
         ],
       ),
@@ -72,7 +211,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       elevation: 4,
       child: ListTile(
         title: Text(
-          'Notifications',
+          AppLocalizations.of(context).translate('notifications'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -81,18 +220,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         trailing: Switch(
           value: _notificationsEnabled,
-          onChanged: (value) {
-            setState(() {
-              _notificationsEnabled = value;
-            });
-          },
+          onChanged: _toggleNotifications,
           activeColor: Colors.green,
         ),
       ),
     );
   }
 
-  // Reusable Setting Option Widget with improved design
+  // Reusable Setting Option Widget
   Widget _buildSettingOption(
     BuildContext context, {
     required String title,
@@ -125,11 +260,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       try {
         await _auth.sendPasswordResetEmail(email: _auth.currentUser!.email!);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password reset email sent!')),
+          SnackBar(content: Text(AppLocalizations.of(context).translate('password_reset_email_sent'))),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error sending reset email: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context).translate('error_sending_reset_email')}: $e')),
         );
       }
     }
@@ -140,16 +275,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Account', style: TextStyle(color: Colors.red)),
-        content: Text('Are you sure you want to delete your account? This action is irreversible.'),
+        title: Text(AppLocalizations.of(context).translate('delete_account'), style: TextStyle(color: Colors.red)),
+        content: Text(AppLocalizations.of(context).translate('delete_account_confirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(AppLocalizations.of(context).translate('cancel')),
           ),
           TextButton(
             onPressed: () => _deleteAccount(context),
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context).translate('delete'), style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -166,22 +301,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting account: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context).translate('error_deleting_account')}: $e')),
       );
     }
   }
 
   // Sign Out Functionality
   void _signOut() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
     await _auth.signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
-  }
 
-  // Change Language Functionality
-  void _changeLanguage() {
-    // Handle language change logic here
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (Route<dynamic> route) => false,
+    );
   }
 }

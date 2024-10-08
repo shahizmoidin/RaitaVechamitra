@@ -1,17 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AuthProvider extends ChangeNotifier {
+// StateNotifier to handle Firebase authentication and state changes
+class AuthNotifier extends StateNotifier<User?> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  User? get currentUser => _auth.currentUser;
-
-  AuthProvider() {
-    // Listen to auth state changes and notify listeners accordingly
+  AuthNotifier() : super(FirebaseAuth.instance.currentUser) {
+    // Listen to auth state changes
     _auth.authStateChanges().listen((user) {
-      notifyListeners();
+      state = user; // Update the current user in the state
     });
   }
 
@@ -22,22 +21,10 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
-      notifyListeners(); // Notify listeners on sign-in success
+      state = userCredential.user; // Update the state after successful sign-in
       return null; // Sign-in successful
     } on FirebaseAuthException catch (e) {
-      // Handle specific error codes
-      switch (e.code) {
-        case 'user-not-found':
-          return 'No user found for that email.';
-        case 'wrong-password':
-          return 'Incorrect password. Please try again.';
-        case 'invalid-email':
-          return 'The email address is not valid.';
-        default:
-          return 'Error signing in: ${e.message}';
-      }
-    } catch (e) {
-      return 'An unexpected error occurred during sign-in: $e';
+      return _handleAuthError(e);
     }
   }
 
@@ -55,22 +42,12 @@ class AuthProvider extends ChangeNotifier {
           'email': email,
           'createdAt': FieldValue.serverTimestamp(),
         });
-        notifyListeners();
-        return null; // Sign-up successful
+        state = userCredential.user; // Update the state after successful sign-up
+        return null;
       }
       return 'Failed to create a user account.';
     } on FirebaseAuthException catch (e) {
-      // Handle Firebase sign-up errors
-      switch (e.code) {
-        case 'email-already-in-use':
-          return 'The email is already in use by another account.';
-        case 'weak-password':
-          return 'The password is too weak.';
-        default:
-          return 'Error during sign-up: ${e.message}';
-      }
-    } catch (e) {
-      return 'An unexpected error occurred during sign-up: $e';
+      return _handleAuthError(e);
     }
   }
 
@@ -78,7 +55,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      notifyListeners(); // Notify listeners after signing out
+      state = null; // Update the state after sign-out
     } catch (e) {
       print('Error signing out: $e');
     }
@@ -86,9 +63,9 @@ class AuthProvider extends ChangeNotifier {
 
   // Get the current user's name from Firestore
   Future<String?> getUserName() async {
-    if (currentUser != null) {
+    if (state != null) {
       try {
-        DocumentSnapshot doc = await _firestore.collection('users').doc(currentUser!.uid).get();
+        DocumentSnapshot doc = await _firestore.collection('users').doc(state!.uid).get();
         if (doc.exists) {
           return doc['name'] as String?;
         } else {
@@ -101,49 +78,57 @@ class AuthProvider extends ChangeNotifier {
     return null;
   }
 
-  // Check if the user is logged in
-  bool isLoggedIn() {
-    return currentUser != null;
-  }
-
   // Send password reset email
   Future<String?> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       return 'Password reset link sent. Please check your email.';
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        return 'No user found for that email.';
-      }
-      return 'Error resetting password: ${e.message}';
+      return _handleAuthError(e);
     }
   }
 
   // Update the user's email
   Future<String?> updateEmail(String newEmail) async {
     try {
-      await currentUser?.updateEmail(newEmail);
-      notifyListeners();
+      await state?.updateEmail(newEmail);
       return null;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        return 'The email address is already in use by another account.';
-      }
-      return 'Error updating email: ${e.message}';
+      return _handleAuthError(e);
     }
   }
 
   // Delete the user's account
   Future<String?> deleteAccount() async {
     try {
-      await currentUser?.delete();
-      notifyListeners();
+      await state?.delete();
+      state = null; // Update state after account deletion
       return 'Account successfully deleted.';
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        return 'Please log in again and try deleting the account.';
-      }
-      return 'Error deleting account: ${e.message}';
+      return _handleAuthError(e);
+    }
+  }
+
+  // Handle FirebaseAuth errors
+  String _handleAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No user found for that email.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'email-already-in-use':
+        return 'The email is already in use by another account.';
+      case 'weak-password':
+        return 'The password is too weak.';
+      default:
+        return 'Error: ${e.message}';
     }
   }
 }
+
+// Riverpod provider for AuthNotifier
+final authProvider = StateNotifierProvider<AuthNotifier, User?>((ref) {
+  return AuthNotifier();
+});

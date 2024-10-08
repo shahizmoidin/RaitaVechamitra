@@ -1,0 +1,189 @@
+Scheme(
+      name: 'PM Kisan Samman Nidhi Yojana',
+      description: 'Provides direct income support to small and marginal farmers.',
+      link: 'https://pmkisan.gov.in/',
+      category: 'Income Support',
+    ),
+    Scheme(
+      name: 'Karnataka Raitha Siri Scheme',
+      description: 'Offers financial assistance for millet cultivation in Karnataka.',
+      link: 'https://raitamitra.karnataka.gov.in/',
+      category: 'Income Support',
+    ),
+    Scheme(
+      name: 'Rashtriya Krishi Vikas Yojana (RKVY)',
+      description: 'Aims at ensuring comprehensive development of agriculture.',
+      link: 'https://rkvy.nic.in/',
+      category: 'Income Support',
+    ),
+    Scheme(
+      name: 'Mukhyamantri Krishi Ashirwad Yojana',
+      description: 'Direct benefit transfer to small farmers for farming assistance.',
+      link: 'https://krishi.bih.nic.in/',
+      category: 'Income Support',
+    ),
+    Scheme(
+      name: 'Atal Solar Krishi Pump Yojana',
+      description: 'Provides solar pumps to farmers for irrigation purposes.',
+      link: 'https://mahadiscom.in/atal-solar-krishi-pump-yojana/',
+      category: 'Income Support',
+    ),
+    
+    // Category: Crop Insurance
+    Scheme(
+      name: 'Pradhan Mantri Fasal Bima Yojana (PMFBY)',
+      description: 'Provides crop insurance to protect farmers against crop loss.',
+      link: 'https://pmfby.gov.in/',
+      category: 'Crop Insurance',
+    ),
+    Scheme(
+      name: 'Weather-Based Crop Insurance Scheme (WBCIS)',
+      description: 'Covers risks arising from adverse weather conditions.',
+      link: 'https://www.agri-insurance.gov.in/',
+      category: 'Crop Insurance',
+    ),
+    Scheme(
+      name: 'Restructured Weather Based Crop Insurance Scheme',
+      description: 'Mitigates weather risks for farmers engaged in horticulture and commercial crops.',
+      link: 'https://agriculture.gov.in/',
+      category: 'Crop Insurance',
+    ),
+    
+    // Category: Soil and Irrigation
+    Scheme(
+      name: 'Soil Health Card Scheme',
+      description: 'Helps farmers in identifying the nutritional deficiencies of their soil.',
+      link: 'https://soilhealth.dac.gov.in/',
+      category: 'Soil and Irrigation',
+    ),
+    Scheme(
+      name: 'Krishi Bhagya Scheme',
+      description: 'Supports farmers with water conservation and irrigation facilities in dry regions.',
+      link: 'https://raitamitra.karnataka.gov.in/Pages/krishi-bhagya.aspx',
+      category: 'Soil and Irrigation',
+    ),
+    Scheme(
+      name: 'Pradhan Mantri Krishi Sinchayee Yojana (PMKSY)',
+      description: 'Improves irrigation infrastructure and aims for "Har Khet Ko Pani".',
+      link: 'https://pmksy.gov.in/',
+      category: 'Soil and Irrigation',
+    ),
+    Scheme(
+      name: 'NABARD Rural Infrastructure Development Fund',
+      description: 'Assists rural infrastructure projects like irrigation and soil conservation.',
+      link: 'https://nabard.org/',
+      category: 'Soil and Irrigation',
+    ),
+    Scheme(
+      name: 'Micro Irrigation Fund Scheme',
+      description: 'Provides assistance for micro-irrigation projects for optimal water usage.',
+      link: 'https://pmksy.gov.in/',
+      category: 'Soil and Irrigation',
+    ),
+    
+    // Category: Equipment
+    Scheme(
+      name: 'Farm Mechanization Scheme',
+      description: 'Promotes mechanization of farm operations by providing subsidies on agricultural equipment.',
+      link: 'https://agrimachinery.nic.in/',
+      category: 'Equipment',
+    ),
+    Scheme(
+      name: 'Sub-Mission on Agricultural Mechanization',
+      description: 'Focuses on increasing mechanization in small farms by providing financial assistance.',
+      link: 'https://agriculture.gov.in/',
+      category: 'Equipment',
+    ),
+    Scheme(
+      name: 'Custom Hiring Centres Scheme',
+      description: 'Enables farmers to hire agricultural machinery at affordable rates.',
+      link: 'https://agrimachinery.nic.in/',
+      category: 'Equipment',
+    ),
+    Scheme(
+      name: 'Kisan Vikas Patra',
+      description: 'A savings scheme to ensure farmers earn a stable income for farm investments.',
+      link: 'https://www.indiapost.gov.in/Financial/Pages/Content/Kisan-Vikas-Patra.aspx',
+      category: 'Income Support',
+    ),
+
+    // Category: Horticulture
+    Scheme(
+      name: 'National Horticulture Mission (NHM)',
+      description: 'Supports the holistic growth of the horticulture sector.',
+      link: 'https://nhm.nic.in/',
+      category: 'Horticulture',
+    ),
+    Scheme(
+      name: 'Pradhan Mantri Matsya Sampada Yojana',
+      description: 'Focuses on the sustainable development of fisheries for farmers involved in fish farming.',
+      link: 'https://dof.gov.in/pmmsy',
+      category: 'Horticulture',
+    ),
+    Scheme(
+      name: 'Operation Greens',
+      description: 'Aims at stabilizing the supply of fruits and vegetables and ensuring their availability at affordable prices.',
+      link: 'https://www.mofpi.gov.in/',
+      category: 'Horticulture',
+    ),
+
+    // Category: Food Security
+    Scheme(
+      name: 'National Food Security Mission (NFSM)',
+      description: 'Increases the production of rice, wheat, pulses, and other food crops.',
+      link: 'https://nfsm.gov.in/',
+      category: 'Food Security',
+    ),
+    Scheme(
+      name: 'Pradhan Mantri Garib Kalyan Yojana (PMGKY)',
+      description: 'Provides food grains to poor farmers in times of crisis.',
+      link: 'https://pmgky.gov.in/',
+      category: 'Food Security',
+    ),
+    Scheme(
+      name: 'One Nation One Ration Card Scheme',
+      description: 'Ensures food security for migrant farmers across India through a portable ration card.',
+      link: 'https://nfsa.gov.in/',
+      category: 'Food Security',
+    ),
+    
+    // Category: Livestock and Animal Husbandry
+    Scheme(
+      name: 'National Livestock Mission',
+      description: 'Promotes the development of livestock, especially in rural areas.',
+      link: 'https://nlm.gov.in/',
+      category: 'Livestock and Animal Husbandry',
+    ),
+    Scheme(
+      name: 'Rashtriya Gokul Mission',
+      description: 'Aims at the development and conservation of indigenous cattle breeds.',
+      link: 'https://dahd.nic.in/rashtriya-gokul-mission',
+      category: 'Livestock and Animal Husbandry',
+    ),
+    Scheme(
+      name: 'Dairy Entrepreneurship Development Scheme',
+      description: 'Provides financial support to small dairy farmers for purchasing livestock and dairy equipment.',
+      link: 'https://www.nabard.org/',
+      category: 'Livestock and Animal Husbandry',
+    ),
+    
+    // Category: Organic Farming
+    Scheme(
+      name: 'Paramparagat Krishi Vikas Yojana (PKVY)',
+      description: 'Promotes organic farming and develops sustainable farming models.',
+      link: 'https://agricoop.nic.in/',
+      category: 'Organic Farming',
+    ),
+    Scheme(
+      name: 'Mission Organic Value Chain Development for North Eastern Region',
+      description: 'Promotes organic farming in the North Eastern region of India.',
+      link: 'https://movcdner.in/',
+      category: 'Organic Farming',
+    ),
+
+      final List<Map<String, dynamic>> reminders = [
+    {'title': 'Stay Hydrated!', 'body': 'Time to drink water!', 'hour': 9, 'minute': 0},
+    {'title': 'Stretch Break', 'body': 'Take a short break and stretch!', 'hour': 12, 'minute': 0},
+    {'title': 'UV Protection', 'body': 'Apply sunscreen to protect your skin.', 'hour': 14, 'minute': 0},
+    {'title': 'Get Enough Sleep', 'body': 'Prepare for a good night\'s rest!', 'hour': 21, 'minute': 0},
+  ];

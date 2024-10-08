@@ -4,6 +4,7 @@ import 'package:raitavechamitra/screens/home_screen.dart';
 import 'package:raitavechamitra/screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }

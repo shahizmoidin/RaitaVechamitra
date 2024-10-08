@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "906032507183-i6shlquthgudfcaf4g4k58fpajdrldhd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.raita.raitavechamitra.raitavechamitra",
+            "certificate_hash": "831f70517f4c24b86644729ba133e067acd764c2"
+          }
+        },
+        {
           "client_id": "906032507183-5r0akmkscmjapu1faeflt6ba7fvifkua.apps.googleusercontent.com",
           "client_type": 3
         }

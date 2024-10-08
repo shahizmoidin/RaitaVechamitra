@@ -1,0 +1,276 @@
+{
+  "title": "Raitavechamitra",
+  "settings": "Settings",
+  "notifications": "Notifications",
+  "reset_password": "Reset Password",
+  "delete_account": "Delete Account",
+  "sign_out": "Sign Out",
+  "language": "Language",
+  "confirm_delete_account": "Confirm Delete Account",
+  "are_you_sure": "Are you sure you want to delete your account?",
+  "cancel": "Cancel",
+  "kan":"Kannada",
+  "eng":"English",
+  "hin":"Hindi",
+  "select_language":"Select Language",
+  "notifications_disabled":"Notifications Disabled",
+  "notifications_enabled":"Notifications Enabled",
+  "delete": "Delete",
+  "welcome": "Welcome Farmers",
+  "loading": "Loading...",
+  "login": "Login",
+  "email": "Email",
+  "password": "Password",
+  "forgot_password": "Forgot Password?",
+  "sign_in": "Sign In",
+  "sign_up": "Sign Up",
+  "welcome_back": "Welcome Back!",
+  "hello": "Hello",
+  "total_income": "Total Income: ₹{amount}",
+  "total_expense": "Total Expense: ₹{amount}",
+  "add_income_expense": "Add Income/Expense",
+  "income": "Income",
+  "expense": "Expense",
+  "categories": "Categories",
+  "view_chart": "View Chart",
+  "delete_account_confirm":"Are you sure?",
+  "password_reset_email_sent":"Password reset email sent",
+  "error_sending_reset_email":"Error sending reset email",
+  
+  "add_reminder": "Add Reminder",
+  "reminder_title": "Reminder Title",
+  "reminder_description": "Reminder Description",
+  "reminder_time": "Reminder Time",
+  "save_reminder": "Save Reminder",
+  "edit_reminder": "Edit Reminder",
+  "delete_reminder": "Delete Reminder",
+  "government_schemes": "Government Schemes",
+  "view_scheme_details": "View Scheme Details",
+  "apply_for_scheme": "Apply for Scheme",
+  "scheme_title": "Scheme Title",
+  "scheme_description": "Scheme Description",
+  "weather_forecast": "Weather Forecast",
+  "current_weather": "Current Weather",
+  "temperature": "Temperature",
+  "weather_details": "Weather Details",
+  "next_12": "Next 12 Hours",
+  "previous_12": "Previous 12 Hours",
+  "humidity": "Humidity",
+  "wind_speed": "Wind Speed",
+  "pressure": "Pressure",
+  "location": "Location",
+  "search_loc": "Search Location",
+  "enter_city": "Enter city or region",
+  "search": "Search",
+  "name": "Name",
+  "add_income":"Add Income",
+  "please_select_category":"Please Select Category",
+  "please_enter_amount":"Please Enter Amount",
+  "please_enter_custom_category":"Please Enter Custom Category",
+  "please_enter_valid_number":"please enter valid number",
+  "add_expense":"Add Expense",
+  "confirm_password": "Confirm Password",
+  "create_account": "Create Account",
+  "already_have_account": "Already have an account? Login",
+  "dont_have_account": "Don't have an account? Sign Up",
+  "select_category": "Select or Enter Category",
+  "category": "Category",
+  "enter_custom_category": "Enter Custom Category",
+  "custom_category": "Custom Category",
+  "amount": "Amount",
+  "description": "Description",
+  "date": "Date",
+  "save_payment": "Save Payment",
+  "update_payment": "Update Payment",
+"farming": "Farming",
+    "wages": "Wages",
+    "rent": "Rent",
+    "medical_expenses": "Medical Expenses"
+
+
+
+
+    ,
+      "health_reminders": "Health & Safety Reminders",
+      "stay_hydrated": "Stay Hydrated",
+      "stay_hydrated_desc": "Drink water regularly throughout the day to stay hydrated.",
+      "water_tracker": "Water Intake Tracker",
+      "add_water_intake": "Add Water Intake",
+      "water_intake_progress": "{{progress}}% of daily intake",
+      "take_breaks": "Take Breaks",
+      "take_breaks_desc": "Why breaks are important and some simple exercises.",
+      "stretch_breaks": "Stretch Breaks",
+      "stretch_importance": "Why Breaks Are Important",
+      "stretch_importance_desc": "Taking short breaks helps prevent fatigue, improves concentration, and can reduce physical strain.",
+      "stretching_exercises": "Stretching Exercises",
+      "neck_stretch": "Neck Stretch",
+      "neck_stretch_desc": "Tilt your head slowly to each side, holding for 10-15 seconds.",
+      "shoulder_shrugs": "Shoulder Shrugs",
+      "shoulder_shrugs_desc": "Raise your shoulders towards your ears, hold for a few seconds, and release.",
+      "leg_stretch": "Leg Stretch",
+      "leg_stretch_desc": "Extend one leg out, bend forward slightly, and hold for 15 seconds.",
+      "protect_uv": "Protect from UV",
+      "protect_uv_desc": "Learn about UV index and sun protection.",
+      "uv_protection": "UV Protection",
+      "understand_uv": "Understanding UV Rays",
+      "uv_desc":"UV (Ultraviolet) rays from the sun can cause skin damage, sunburn, and increase the risk of skin cancer. The UV index measures the intensity of UV rays, ranging from 0 (low) to 11+ (extreme).",
+      "uv_levels": "UV Index Levels:",
+      "low_uv": "Low (0-2)",
+      "low_uv_desc": "Minimal risk of harm from unprotected sun exposure.",
+      "moderate_uv": "Moderate (3-5)",
+      "moderate_uv_desc": "Take precautions, such as wearing sunscreen.",
+      "high_uv": "High (6-7)",
+      "high_uv_desc": "Protection against skin damage is needed.",
+      "very_high_uv": "Very High (8-10)",
+      "very_high_uv_desc": "Extra precautions, like wearing sunglasses, are needed.",
+      "extreme_uv": "Extreme (11+)",
+      "extreme_uv_desc": "Avoid sun exposure, seek shade.",
+      "get_sleep": "Get Enough Sleep",
+      "get_sleep_desc": "Track your sleep for better health.",
+      "remedies_tips": "Remedies & Tips",
+      "remedies_tips_desc": "Discover home remedies and wellness tips.",
+     
+      "honey_lemon": "Honey & Lemon",
+      "honey_lemon_desc": "Mix honey with warm lemon water to boost immunity and detoxify.",
+      "ginger_tea": "Ginger Tea",
+      "ginger_tea_desc": "Ginger helps soothe throat irritation and improves digestion.",
+      "turmeric_milk": "Turmeric Milk",
+      "turmeric_milk_desc": "Turmeric is anti-inflammatory and can help boost recovery.",
+      "stay_active": "Stay Active",
+      "stay_active_desc": "Daily exercise improves cardiovascular health and boosts your mood."
+
+
+      ,"app_title": "Sleep Tracker",
+      "tracking_sleep": "Tracking Sleep...",
+      "sleep_tracker": "Sleep Tracker",
+      "start_tracking": "Start Tracking Sleep",
+      "stop_tracking": "Stop Tracking Sleep",
+      "started_at": "Started at: ",
+      "last_sleep_duration": "Last Sleep Duration: ",
+      "sleep_history": "Sleep History",
+      "no_sleep_history": "No sleep history available",
+      "start_time": "Start: ",
+      "end_time": "End: ",
+      "duration": "Duration: ",
+      "of_daily":"of daily intake"
+
+
+
+      ,
+       
+        "confirm_sign_out": "Are you sure you want to sign out?",
+       
+        "home": "Home",
+        "weather": "Weather",
+        "schemes": "Schemes",
+        "health": "Health",
+        "profile": "Profile",
+        "expense_limit": "Daily Expense Limit",
+        "used_limit": "You have used",
+        "recent_transactions": "Recent Transactions",
+       
+        "delete_payment": "Delete Payment",
+        "are_you_sure_delete": "Are you sure you want to delete this payment?",
+        "error_loading": "Error loading data",
+        
+        "summary": "Here's your farming summary"
+
+
+,
+  "schemetitle": "Farmer Schemes",
+  "search_schemes": "Search schemes...",
+  "no_schemes_found": "No schemes found",
+  "income_support": "Income Support",
+  "crop_insurance": "Crop Insurance",
+  "soil_irrigation": "Soil and Irrigation",
+  "equipment": "Equipment",
+  "horticulture": "Horticulture",
+  "food_security": "Food Security",
+  "livestock": "Livestock and Animal Husbandry",
+  "organic_farming": "Organic Farming",
+  "all_categories": "All Categories",
+  "favorite": "Favorite",
+  "favorites": "Favorites",
+  "more_info": "More Info",
+  "close": "Close",
+  "webview_title": "WebView",
+  
+  
+   "guest_user": "Guest User",
+   
+   "using_since": "Using Since",
+   "edit_name": "Edit Name",
+   "enter_name": "Enter your name",
+   "save_changes": "Save Changes",
+   "name_updated": "Name updated successfully!",
+   "failed_update_name": "Failed to update name",
+
+   "are_you_sure_sign_out": "Are you sure you want to sign out?",
+   "error_signing_out": "Error signing out",
+
+  
+   
+   "failed_delete_account": "Failed to delete account",
+ 
+ 
+  
+   
+      "pm_kisanname": "PM Kisan Samman Nidhi Yojana",
+      "pm_kisandescription": "Provides direct income support to small and marginal farmers."
+   ,
+      "karnataka_raithaname": "Karnataka Raitha Siri Scheme",
+      "karnataka_raithadescription": "Offers financial assistance for millet cultivation in Karnataka."
+  ,
+      "rkvyname": "Rashtriya Krishi Vikas Yojana (RKVY)",
+      "rkvydescription": "Aims at ensuring comprehensive development of agriculture."
+    ,
+      "mukhyamantri_krishiname": "Mukhyamantri Krishi Ashirwad Yojana",
+      "mukhyamantri_krishidescription": "Direct benefit transfer to small farmers for farming assistance."
+   ,
+      "atal_solarname": "Atal Solar Krishi Pump Yojana",
+      "atal_solardescription": "Provides solar pumps to farmers for irrigation purposes."
+  ,
+      "pmfbyname": "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+      "pmfbydescription": "Provides crop insurance to protect farmers against crop loss."
+  ,
+      "wbcisname": "Weather-Based Crop Insurance Scheme (WBCIS)",
+      "wbcisdescription": "Covers risks arising from adverse weather conditions."
+   ,
+      "soil_healthname": "Soil Health Card Scheme",
+      "soil_healthdescription": "Helps farmers in identifying the nutritional deficiencies of their soil."
+   ,
+      "krishi_bhagyaname": "Krishi Bhagya Scheme",
+      "krishi_bhagyadescription": "Supports farmers with water conservation and irrigation facilities in dry regions."
+  ,
+      "pmksyname": "Pradhan Mantri Krishi Sinchayee Yojana (PMKSY)",
+      "pmksydescription": "Improves irrigation infrastructure and aims for 'Har Khet Ko Pani'."
+  ,
+      "nabard_ruralname": "NABARD Rural Infrastructure Development Fund",
+      "nabard_ruraldescription": "Assists rural infrastructure projects like irrigation and soil conservation."
+    ,
+      "farm_mechanizationname": "Farm Mechanization Scheme",
+      "farm_mechanizationdescription": "Promotes mechanization of farm operations by providing subsidies on agricultural equipment."
+   ,
+      "custom_hiringname": "Custom Hiring Centres Scheme",
+      "custom_hiringdescription": "Enables farmers to hire agricultural machinery at affordable rates."
+   ,
+      "national_horticulturename": "National Horticulture Mission (NHM)",
+      "national_horticulturedescription": "Supports the holistic growth of the horticulture sector."
+ ,
+      "pm_garibname": "Pradhan Mantri Garib Kalyan Yojana (PMGKY)",
+      "pm_garibdescription": "Provides food grains to poor farmers in times of crisis."
+   ,
+      "national_livestockname": "National Livestock Mission",
+      "national_livestockdescription": "Promotes the development of livestock, especially in rural areas."
+    ,
+      "pkvyname": "Paramparagat Krishi Vikas Yojana (PKVY)",
+      "pkvydescription": "Promotes organic farming and develops sustainable farming models."
+    
+  }
+  
+  
+
+      
+    
+    
+
