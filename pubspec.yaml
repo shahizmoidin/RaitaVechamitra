@@ -63,6 +63,7 @@ dependencies:
   flutter_inappwebview: ^6.1.4
   flutter_localizations:
     sdk: flutter
+  android_intent_plus: ^5.2.0
  
 
 flutter_launcher_icons:
@@ -118,6 +119,8 @@ flutter:
     - family: Schyler
       fonts:
         - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
+        - asset: assets/fonts/NotoSansKannada-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

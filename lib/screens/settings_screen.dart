@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:provider/provider.dart';
 import 'package:raitavechamitra/providers/local_provider.dart';
 import 'package:raitavechamitra/utils/localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:raitavechamitra/screens/login_screen.dart';
-import 'package:firebase_messaging/firebase_messaging.dart'; // Firebase Messaging for notification control
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -15,71 +13,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _notificationsEnabled = true; // Default value
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
   @override
   void initState() {
     super.initState();
-    _loadNotificationSettings();
-  }
-
-  // Load notification setting from shared preferences
-  Future<void> _loadNotificationSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
-    });
-  }
-
-  // Save notification setting to shared preferences
-  Future<void> _saveNotificationSettings(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notificationsEnabled', value);
-  }
-
-  // Toggle Notifications (enable/disable Firebase Messaging)
-  Future<void> _toggleNotifications(bool value) async {
-    setState(() {
-      _notificationsEnabled = value;
-    });
-    _saveNotificationSettings(value);
-
-    if (value) {
-      await _enableNotifications();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context).translate('notifications_enabled')),
-        backgroundColor: Colors.green,
-      ));
-    } else {
-      await _disableNotifications();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context).translate('notifications_disabled')),
-        backgroundColor: Colors.red,
-      ));
-    }
-  }
-
-  // Enable Notifications by re-enabling Firebase Messaging
-  Future<void> _enableNotifications() async {
-    await _firebaseMessaging.setAutoInitEnabled(true); // Enable Firebase Messaging
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted notification permission');
-    } else {
-      print('User declined or has not accepted notification permissions');
-    }
-  }
-
-  // Disable Notifications by unsubscribing from Firebase Messaging
-  Future<void> _disableNotifications() async {
-    await _firebaseMessaging.setAutoInitEnabled(false); // Disable Firebase Messaging
-    await _firebaseMessaging.unsubscribeFromTopic('all'); // Unsubscribe from global topic or any relevant topics
+    // No need to load or save notification settings
   }
 
   // Language Selection Handler
@@ -122,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Navigator.pop(context);
                   },
                 ),
-                 ListTile(
+                ListTile(
                   leading: Icon(Icons.language, color: Colors.green),
                   title: Text(
                     AppLocalizations.of(context).translate('hin'),
@@ -171,7 +109,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          _buildNotificationOption(context),
           _buildSettingOption(
             context,
             title: AppLocalizations.of(context).translate('reset_password'),
@@ -200,29 +137,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => _selectLanguage(context),
           ),
         ],
-      ),
-    );
-  }
-
-  // Notification Settings Option
-  Widget _buildNotificationOption(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 4,
-      child: ListTile(
-        title: Text(
-          AppLocalizations.of(context).translate('notifications'),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.green[800],
-          ),
-        ),
-        trailing: Switch(
-          value: _notificationsEnabled,
-          onChanged: _toggleNotifications,
-          activeColor: Colors.green,
-        ),
       ),
     );
   }

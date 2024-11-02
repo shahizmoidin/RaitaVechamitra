@@ -4,8 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
 import 'package:raitavechamitra/models/payment.dart';
+import 'package:raitavechamitra/screens/help_screen.dart';
 import 'package:raitavechamitra/screens/login_screen.dart';
+import 'package:raitavechamitra/screens/reaminder_notification.dart';
 import 'package:raitavechamitra/screens/reminder_screen.dart';
 import 'package:raitavechamitra/screens/schemes_screen.dart';
 import 'package:raitavechamitra/screens/weather_screen.dart';
@@ -163,6 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onPageChanged: _onItemTapped,
         children: [
           _buildHomeBody(),
+          ScheduleNotificationScreen(),
           WeatherScreen(),
           SchemeScreen(),
           HealthReminderScreen(),
@@ -174,88 +178,325 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   AppBar _buildAppBar() {
-    return AppBar(
-      title: Text(
-        AppLocalizations.of(context).translate('title'),
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
+  return AppBar(
+    title: Text(
+      AppLocalizations.of(context).translate('title'),
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    centerTitle: true,
+    flexibleSpace: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green[400]!, Colors.green[800]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-      centerTitle: true,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.green[400]!, Colors.green[800]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    ),
+
+    // Add leading for help icon on the left side
+    leading: IconButton(
+      icon: Icon(Icons.help_outline, color: Colors.white),
+      onPressed: () {
+        _openHelpScreen(); // Open the help screen when the help icon is pressed
+      },
+    ),
+
+    actions: [
+      IconButton(
+  icon: Icon(Icons.download, color: Colors.white),
+  onPressed: () async {
+    await _showYearSelectionDialog(ref);
+  },
+),
+
+      PopupMenuButton<int>(
+        icon: Icon(Icons.person, color: Colors.white),
+        onSelected: (item) {
+          if (item == 0) {
+            _openProfile();
+          } else if (item == 1) {
+            _openSetting();
+          } else if (item == 2) {
+            _logout();
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(value: 0, child: Text(AppLocalizations.of(context).translate('profile'))),
+          PopupMenuItem(value: 1, child: Text(AppLocalizations.of(context).translate('settings'))),
+          PopupMenuItem(value: 2, child: Text(AppLocalizations.of(context).translate('sign_out'))),
+        ],
+      ),
+    ],
+  );
+}
+
+Future<void> _showYearSelectionDialog(WidgetRef ref) async {
+  int selectedYear = DateTime.now().year; // Default to current year
+  List<int> availableYears = List.generate(
+    DateTime.now().year - 2019 + 1, // Adjust range based on how many years back you want
+    (index) => DateTime.now().year - index,
+  );
+
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+        backgroundColor: Colors.green[50], // Light background color
+        title: Text(
+          "Select Year",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.green[800], // Dark green color
           ),
         ),
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.download, color: Colors.white),
-          onPressed: _downloadPDF,
-        ),
-        PopupMenuButton<int>(
-          icon: Icon(Icons.person, color: Colors.white),
-          onSelected: (item) {
-            if (item == 0) {
-              _openProfile();
-            } else if (item == 1) {
-              _openSetting();
-            } else if (item == 2) {
-              _logout();
-            }
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: DropdownButton<int>(
+                value: selectedYear,
+                onChanged: (int? newYear) {
+                  if (newYear != null) {
+                    setState(() => selectedYear = newYear);
+                  }
+                },
+                items: availableYears.map((year) {
+                  return DropdownMenuItem<int>(
+                    value: year,
+                    child: Text(
+                      year.toString(),
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.green[900], // Text color for dropdown items
+                      ),
+                    ),
+                  );
+                }).toList(),
+                icon: Icon(Icons.arrow_drop_down, color: Colors.green[800]),
+                underline: SizedBox(),
+                isExpanded: true,
+                dropdownColor: Colors.green[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            );
           },
-          itemBuilder: (context) => [
-            PopupMenuItem(value: 0, child: Text(AppLocalizations.of(context).translate('profile'))),
-            PopupMenuItem(value: 1, child: Text(AppLocalizations.of(context).translate('settings'))),
-            PopupMenuItem(value: 2, child: Text(AppLocalizations.of(context).translate('sign_out'))),
-          ],
         ),
-      ],
-    );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white, backgroundColor: Colors.green[700], // Text color
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _downloadPDF(ref, selectedYear); // Call _downloadPDF with selected year
+            },
+            child: Text(
+              "Download",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+// Function to navigate to the Help Screen
+void _openHelpScreen() {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => HelpScreen()), // Navigate to the help screen
+  );
+}
+
+Future<void> _downloadPDF(WidgetRef ref, int selectedYear) async {
+  final pdf = pw.Document();
+
+  // Load logo and fonts for multi-language support
+  final Uint8List logoBytes = (await rootBundle.load('assets/images/logo.png')).buffer.asUint8List();
+  final ttfEnglish = pw.Font.ttf(await rootBundle.load("assets/fonts/NotoSans-Regular.ttf"));
+  
+  // Filter payments data by selected year
+  final payments = ref.watch(paymentsProvider).asData?.value ?? [];
+  final filteredPayments = payments.where((payment) => payment.date.year == selectedYear).toList();
+
+  // Initialize monthly data for income and expense
+  final monthlyIncome = List<double>.filled(12, 0);
+  final monthlyExpense = List<double>.filled(12, 0);
+  double totalIncome = 0.0;
+  double totalExpense = 0.0;
+
+  // Group payments by month and type (income/expense)
+  for (var payment in filteredPayments) {
+    final monthIndex = payment.date.month - 1;
+    if (payment.type == PaymentType.credit) {
+      monthlyIncome[monthIndex] += payment.amount;
+      totalIncome += payment.amount;
+    } else if (payment.type == PaymentType.debit) {
+      monthlyExpense[monthIndex] += payment.amount;
+      totalExpense += payment.amount;
+    }
   }
 
-  Future<void> _downloadPDF() async {
-    final pdf = pw.Document();
-    final Uint8List logoBytes = (await rootBundle.load('assets/images/logo.png')).buffer.asUint8List();
-    final ttf = pw.Font.ttf(await rootBundle.load("assets/fonts/NotoSans-Regular.ttf"));
-    final payments = ref.watch(paymentsProvider).asData?.value ?? [];
+  final netProfit = totalIncome - totalExpense;
+  final profitabilityStatus = netProfit > 0 ? "Profit" : netProfit < 0 ? "Loss" : "Break-even";
+  final profitabilityAmount = 'Rs ${netProfit.abs().toStringAsFixed(2)}';
 
-    pdf.addPage(
-      pw.Page(
-        theme: pw.ThemeData.withFont(base: ttf),
-        build: (pw.Context context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Center(
-              child: pw.Image(pw.MemoryImage(logoBytes), height: 100),
+  // Add content to PDF
+  pdf.addPage(
+    pw.Page(
+      theme: pw.ThemeData.withFont(base: ttfEnglish),
+      build: (pw.Context context) => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Center(
+            child: pw.Image(pw.MemoryImage(logoBytes), height: 80),
+          ),
+          pw.SizedBox(height: 10),
+
+          // Centered "Annual Balance Sheet" Title
+          pw.Center(
+            child: pw.Text(
+              'Annual Balance Sheet - $selectedYear',
+              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, font: ttfEnglish),
             ),
-            pw.Text('Income & Expense Report', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 10),
-            pw.Text('Generated on ${DateFormat.yMMMMd().format(DateTime.now())}'),
-            pw.SizedBox(height: 20),
-            pw.Text('Income and Expense Details', style: pw.TextStyle(fontSize: 16)),
-            pw.Divider(),
-            for (var payment in payments)
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          ),
+          pw.SizedBox(height: 10),
+          pw.Text(
+            'Generated on ${DateFormat.yMMMMd().format(DateTime.now())}',
+            style: pw.TextStyle(fontSize: 16, font: ttfEnglish),
+          ),
+          pw.SizedBox(height: 20),
+
+          // Monthly Income & Expense Table
+          pw.Text('Monthly Income & Expense Report', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+          pw.SizedBox(height: 10),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey400),
+            children: [
+              // Table Header
+              pw.TableRow(
                 children: [
-                  pw.Text(payment.category),
-                  pw.Text('Rs ${payment.amount.toStringAsFixed(2)}'),
-                  pw.Text(DateFormat.yMMMd().format(payment.date)),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text('Month', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text('Income', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text('Expense', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+                  ),
                 ],
               ),
-          ],
-        ),
-      ),
-    );
+              
+              // Monthly Data Rows
+              for (var i = 0; i < 12; i++)
+                pw.TableRow(
+                  children: [
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8.0),
+                      child: pw.Text(DateFormat.MMMM().format(DateTime(0, i + 1)), style: pw.TextStyle(fontSize: 12, font: ttfEnglish)),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8.0),
+                      child: pw.Text('Rs ${monthlyIncome[i].toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 12, font: ttfEnglish)),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8.0),
+                      child: pw.Text('Rs ${monthlyExpense[i].toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 12, font: ttfEnglish)),
+                    ),
+                  ],
+                ),
+              
+              // Total Row
+              pw.TableRow(
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text('Total', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text('Rs ${totalIncome.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text('Rs ${totalExpense.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+                  ),
+                ],
+              ),
 
-    await Printing.sharePdf(bytes: await pdf.save(), filename: 'income_expense_report.pdf');
-  }
+              // Profit/Loss Row
+              pw.TableRow(
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text('Profit/Loss', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: ttfEnglish)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text(
+                      profitabilityAmount,
+                      style: pw.TextStyle(
+                        fontSize: 14,
+                        fontWeight: pw.FontWeight.bold,
+                        color: netProfit > 0 ? PdfColors.green : PdfColors.red,
+                        font: ttfEnglish,
+                      ),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8.0),
+                    child: pw.Text(
+                      profitabilityStatus,
+                      style: pw.TextStyle(
+                        fontSize: 14,
+                        fontWeight: pw.FontWeight.bold,
+                        color: netProfit > 0 ? PdfColors.green : netProfit < 0 ? PdfColors.red : PdfColors.grey,
+                        font: ttfEnglish,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+
+  // Save and share the PDF
+  await Printing.sharePdf(bytes: await pdf.save(), filename: 'annual_balance_sheet_$selectedYear.pdf');
+}
+
+
 
   Widget _buildHomeBody() {
     return Scaffold(
@@ -634,10 +875,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           icon: Icon(Icons.home),
           label: AppLocalizations.of(context).translate('home'),
         ),
+         BottomNavigationBarItem(
+          icon: Icon(Icons.notification_add),
+          label: AppLocalizations.of(context).translate('notify'),
+        ),
         BottomNavigationBarItem(
           icon: Icon(Icons.cloud),
           label: AppLocalizations.of(context).translate('weather'),
         ),
+
         BottomNavigationBarItem(
           icon: Icon(Icons.article),
           label: AppLocalizations.of(context).translate('schemes'),

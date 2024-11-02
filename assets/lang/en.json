@@ -1,5 +1,5 @@
 {
-  "title": "Raitavechamitra",
+  "title": "RaitaVechaMitra",
   "settings": "Settings",
   "notifications": "Notifications",
   "reset_password": "Reset Password",
@@ -265,6 +265,44 @@
     ,
       "pkvyname": "Paramparagat Krishi Vikas Yojana (PKVY)",
       "pkvydescription": "Promotes organic farming and develops sustainable farming models."
+
+      ,
+         "help": "Help",
+         "help_guide_title": "How to Use the App",
+         "income_expense": "Income & Expense Screen",
+         "income_expense_description": "On this screen, you can track your income and expenses by adding payments. Select the category, enter the amount, and save your transactions. You can also view the summary and statistics.",
+         "weather_screen": "Weather Screen",
+         "weather_screen_description": "Check the current weather conditions including temperature, humidity, wind speed, and forecasts for the next 12 hours. You can search for different locations too.",
+         "schemes_screen": "Schemes Screen",
+         "schemes_screen_description": "This screen provides detailed information on various government schemes for farmers. You can apply for a scheme, view details, and mark your favorites.",
+         "health_screen": "Health Screen",
+         "health_screen_description": "The Health Screen helps you track important health reminders like staying hydrated, taking breaks, and protecting yourself from UV rays. It also offers health tips.",
+       "app_description": "Raitavechamitra is an app designed to help farmers efficiently manage their income and expenses, access real-time weather forecasts, explore government schemes, and receive health and safety tips. It empowers farmers by providing tools and information essential for their day-to-day farming activities.",
+     
+   "notify":"Notify",
+   "exact_alarm_permission_needed":"Exact alarm permission is required to schedule notifications. Please enable it in your settings.",
+   "schedule_notification": "Schedule Notification",
+
+  "custom_message": "Custom Message",
+  "recurring_notification": "Recurring Notification",
+  "every": "Every",
+  "upcoming_notifications": "Upcoming Notifications",
+  "notification_scheduled": "Notification scheduled",
+  "schedule": "Schedule",
+  "enter_message": "Please enter a message",
+  "select_date": "Please select a date",
+  "select_time": "Please select a time",
+  "not_logged_in": "User not logged in",
+  "notification_deleted": "Notification deleted",
+  "delete_failed": "Failed to delete notification",
+  "schedule_failed": "Failed to schedule notification",
+  
+  "no_message": "No message",
+  "not_selected": "Not selected",
+  "not_available": "Not available"
+   
+       
+       
     
   }
   
